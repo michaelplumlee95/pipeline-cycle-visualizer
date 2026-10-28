@@ -20,7 +20,7 @@ node tests/run.js
 
 `tests/oracle.js` is an independent cycle-by-cycle pipeline model that shares no timing formulas with `script.js`; `oracle.test.js` compares the two on hand-picked and seeded random programs. When changing simulator timing, change the rule in `design.md` first, then both implementations.
 
-Still to write: `tests/E2E_CHECKLIST.md`, the manual browser pass for what a stub DOM can't see (layout, focus, console errors, ~375px viewport).
+`tests/E2E_CHECKLIST.md` is the manual browser pass for what a stub DOM can't see (layout, focus, console errors, ~375px viewport).
 
 ## Planned layout
 
@@ -29,7 +29,7 @@ index.html        static skeleton
 style.css         one flat stylesheet, tokens in :root
 script.js         everything, inside one DOMContentLoaded closure
 design.md         visual + pipeline-semantics spec
-tests/            run.js, lib.js, harness.js, oracle.js, *.test.js
+tests/            run.js, lib.js, harness.js, oracle.js, *.test.js, E2E_CHECKLIST.md
 ```
 
 ## Architecture
