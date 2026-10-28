@@ -2,7 +2,7 @@
 
 A web-based interactive tool for seeing how instructions move through a classic 5-stage MIPS pipeline. Designed for CS331 students to visualize how pipelining overlaps instructions and where data hazards force stalls.
 
-Live site: https://michaelplumlee95.github.io/pipeline-cycle-visualizer/
+**[Open the visualizer](https://michaelplumlee95.github.io/pipeline-cycle-visualizer/)** (no install needed)
 
 ## Features
 
@@ -18,7 +18,9 @@ Live site: https://michaelplumlee95.github.io/pipeline-cycle-visualizer/
 ## How to Use
 
 ### Running the App
-Since this is a static web application, you don't need to install any complex dependencies.
+**Quickest way**: open the [live site](https://michaelplumlee95.github.io/pipeline-cycle-visualizer/) in any browser.
+
+To run it locally instead, note that this is a static web application, so you don't need to install any complex dependencies.
 
 1.  **Download**: Clone this repository or download the ZIP file.
 2.  **Open**: Double-click `index.html` to open it in your web browser.
