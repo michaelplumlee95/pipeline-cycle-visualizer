@@ -58,7 +58,7 @@ Stage and stall colors reuse the kmap-solver accent palette (Dracula-ish) and ar
 | WB | `--stage-wb` | `#bd93f9` |
 | Stall / bubble | `--stall-color` | `#ff5555` |
 
-A stage cell is a tinted fill of its color (about 20% alpha) with a solid 1px border and the stage name as text. A stall cell uses `--stall-color`, a dashed border, and the held stage name in muted text plus a bubble glyph, so it is distinguishable without color. Verify contrast of each stage color on `--surface-color` before shipping.
+A stage cell is a tinted fill of its color (about 20% alpha) with a solid 1px inset ring and the stage name as text. A stall cell uses `--stall-color`, a dashed 1px outline, and the held stage name in muted text plus a bubble glyph, so it is distinguishable without color. Verify contrast of each stage color on `--surface-color` before shipping.
 
 Deliberate deviation from kmap-solver: `--surface-color` is lightened from `#1e1e1e` to `#262626` and cards get a `--card-border` outline, because cards were hard to tell apart from the `#121212` background.
 
@@ -81,7 +81,7 @@ Deliberate deviation from kmap-solver: `--surface-color` is lightened from `#1e1
 
 - **Example picker.** A `select` above the editor. Choosing one replaces the textarea contents.
 - **Assembly editor.** Monospace textarea, one instruction per line. Error lines list below it as `Line N: message` in `--danger-color` on `--danger-bg`.
-- **Cycle table.** Rows are instructions in program order (labeled with the source text, e.g. `lw $t0, 0($t1)`); columns are cycles `1..N`. Header cells use `--overlay-weak`. Cells are centered, `1px solid var(--border-color)`. Row hover and focus use `--overlay-strong`. Cell width is fixed (about 56px) so columns line up.
+- **Cycle table.** Rows are instructions in program order (labeled with the source text, e.g. `lw $t0, 0($t1)`); columns are cycles `1..N`. Header cells use `--overlay-weak`. Cells are centered, `1px solid var(--border-color)`. Row hover and focus use `--overlay-strong`. Cell width is fixed (about 56px) so columns line up. The table uses `border-collapse: separate` with borders on the right and bottom of each cell, so the pinned instruction column fully covers cells scrolling beneath it, and the scroll container has no left padding for the same reason. `:root` sets `color-scheme: dark` so scrollbars match the theme. `.container` is `box-sizing: border-box` so it fits a 375px viewport.
 - **Legend.** Swatch (`0.75rem` square, `border-radius: 2px`) plus label for each stage and for stall. Uses `:empty { display: none }` if ever conditional.
 - **Summary line.** Total cycles, instructions, stall count, and CPI, in a `--inset-bg` box.
 - **Explanation list.** One item per stall: which instruction waits, on which register, from which producer, and which cycle it clears. Hovering an item highlights the matching table cells.

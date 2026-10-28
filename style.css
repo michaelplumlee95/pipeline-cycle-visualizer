@@ -1,4 +1,6 @@
 :root {
+    color-scheme: dark;
+
     --bg-color: #121212;
     --surface-color: #262626;
     --primary-color: #bb86fc;
@@ -40,6 +42,7 @@ body {
 }
 
 .container {
+    box-sizing: border-box;
     width: 90%;
     max-width: 1200px;
     padding: 2rem;
@@ -75,12 +78,17 @@ h1 {
     align-items: start;
 }
 
-/* min-width: 0 lets the wide cycle table scroll inside its card instead of stretching the grid */
+/* min-width: 0 lets the wide cycle table (and the long example names in the picker) shrink inside
+   their cards instead of stretching the grid track past the container */
+.program-section,
+.pipeline-column {
+    min-width: 0;
+}
+
 .pipeline-column {
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    min-width: 0;
 }
 
 section {
@@ -208,13 +216,23 @@ select {
 /* Cycle Table */
 .cycle-table-container {
     overflow-x: auto;
-    padding: 1rem;
+    padding: 1rem 0;
     background-color: var(--inset-bg);
     border-radius: 4px;
 }
 
+/* Separate (not collapsed) borders: a sticky cell only hides what scrolls beneath it if the border is its own */
 .cycle-table {
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.cycle-table thead th {
+    border-top: 1px solid var(--border-color);
+}
+
+.cycle-table .instr-label {
+    border-left: 1px solid var(--border-color);
 }
 
 .cycle-table th {
@@ -222,7 +240,9 @@ select {
     font-size: 0.85rem;
     font-weight: 600;
     padding: 0.4rem 0.5rem;
-    border: 1px solid var(--border-color);
+    border-width: 0 1px 1px 0;
+    border-style: solid;
+    border-color: var(--border-color);
 }
 
 .cycle-table .instr-label {
@@ -265,44 +285,47 @@ select {
     text-align: center;
     font-family: var(--mono-family);
     font-size: 0.9rem;
-    border: 1px solid var(--border-color);
+    border-width: 0 1px 1px 0;
+    border-style: solid;
+    border-color: var(--border-color);
     transition: background-color 0.2s;
 }
 
 .cycle-cell.stage-if {
     background-color: color-mix(in srgb, var(--stage-if) 20%, transparent);
-    border-color: var(--stage-if);
+    box-shadow: inset 0 0 0 1px var(--stage-if);
     color: var(--stage-if);
 }
 
 .cycle-cell.stage-id {
     background-color: color-mix(in srgb, var(--stage-id) 20%, transparent);
-    border-color: var(--stage-id);
+    box-shadow: inset 0 0 0 1px var(--stage-id);
     color: var(--stage-id);
 }
 
 .cycle-cell.stage-ex {
     background-color: color-mix(in srgb, var(--stage-ex) 20%, transparent);
-    border-color: var(--stage-ex);
+    box-shadow: inset 0 0 0 1px var(--stage-ex);
     color: var(--stage-ex);
 }
 
 .cycle-cell.stage-mem {
     background-color: color-mix(in srgb, var(--stage-mem) 20%, transparent);
-    border-color: var(--stage-mem);
+    box-shadow: inset 0 0 0 1px var(--stage-mem);
     color: var(--stage-mem);
 }
 
 .cycle-cell.stage-wb {
     background-color: color-mix(in srgb, var(--stage-wb) 20%, transparent);
-    border-color: var(--stage-wb);
+    box-shadow: inset 0 0 0 1px var(--stage-wb);
     color: var(--stage-wb);
 }
 
 /* Dashed border and bubble glyph keep stalls distinct without relying on color */
 .cycle-cell.stall {
     background-color: var(--danger-bg);
-    border: 1px dashed var(--stall-color);
+    outline: 1px dashed var(--stall-color);
+    outline-offset: -1px;
     color: var(--stall-color);
 }
 
@@ -316,6 +339,10 @@ select {
 }
 
 /* Summary */
+.summary:empty {
+    display: none;
+}
+
 .summary {
     display: flex;
     flex-wrap: wrap;
