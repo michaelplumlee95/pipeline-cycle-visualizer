@@ -246,7 +246,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // A branch resolves in EX and a jump in ID; fetch resumes the cycle after.
             let ifCycle = 1;
             if (afterControl) ifCycle = prev.idEnd + (prev.ins.op === 'j' ? 1 : 2);
-            else if (prev) ifCycle = prev.ifCycle + 1;
+            // Only one instruction fits in IF, so the next one enters as the previous leaves it
+            else if (prev) ifCycle = prev.idStart;
 
             // The instruction ahead holds ID while stalled, so this one holds IF behind it.
             const idStart = prev ? Math.max(ifCycle + 1, prev.idEnd + 1) : ifCycle + 1;

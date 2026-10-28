@@ -10,13 +10,17 @@ It is the sibling of `../kmap-solver` and deliberately matches its stack, look, 
 
 Open `index.html` directly in a browser (or serve the directory with any static file server). There is no dev server or build process.
 
-Tests (once they exist), Node built-ins only:
+Tests, Node built-ins only (exits non-zero on failure):
 
 ```
 node tests/run.js
 ```
 
-Follow kmap-solver's pattern: `tests/harness.js` loads the real `script.js` into a `vm` sandbox with a stub DOM, so the shipped code is what gets tested. Keep a manual `tests/E2E_CHECKLIST.md` for what a stub DOM can't see (layout, focus, console errors, ~375px viewport).
+`tests/harness.js` loads the real `script.js` into a `vm` sandbox with a stub DOM and appends a test-only export line at load time, so `script.js` is not modified and there is no duplicated logic to keep in sync. `PIPE_SCRIPT=/path/to/copy.js` runs the suite against a modified copy, which is useful for mutation checks.
+
+`tests/oracle.js` is an independent cycle-by-cycle pipeline model that shares no timing formulas with `script.js`; `oracle.test.js` compares the two on hand-picked and seeded random programs. When changing simulator timing, change the rule in `design.md` first, then both implementations.
+
+Still to write: `tests/E2E_CHECKLIST.md`, the manual browser pass for what a stub DOM can't see (layout, focus, console errors, ~375px viewport).
 
 ## Planned layout
 
@@ -25,7 +29,7 @@ index.html        static skeleton
 style.css         one flat stylesheet, tokens in :root
 script.js         everything, inside one DOMContentLoaded closure
 design.md         visual + pipeline-semantics spec
-tests/            run.js, lib.js, harness.js, *.test.js, E2E_CHECKLIST.md
+tests/            run.js, lib.js, harness.js, oracle.js, *.test.js
 ```
 
 ## Architecture
