@@ -1,0 +1,378 @@
+:root {
+    --bg-color: #121212;
+    --surface-color: #262626;
+    --primary-color: #bb86fc;
+    --secondary-color: #03dac6;
+    --text-color: #e0e0e0;
+    --border-color: #333;
+    --card-border: #484848;
+    --highlight-color: #3700b3;
+    --font-family: 'Inter', sans-serif;
+
+    --mono-family: 'Courier New', Courier, monospace;
+    --muted-color: #aaa;
+    --danger-color: #ff5555;
+    --danger-bg: rgba(255, 85, 85, 0.15);
+    --overlay-weak: rgba(255, 255, 255, 0.05);
+    --overlay-strong: rgba(255, 255, 255, 0.1);
+    --inset-bg: rgba(0, 0, 0, 0.2);
+    --teal-tint: rgba(3, 218, 198, 0.1);
+
+    --stage-if: #8be9fd;
+    --stage-id: #50fa7b;
+    --stage-ex: #ffb86c;
+    --stage-mem: #ff79c6;
+    --stage-wb: #bd93f9;
+    --stall-color: #ff5555;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    padding: 2rem;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+h1 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Layout */
+.app-layout {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+/* min-width: 0 lets the wide cycle table scroll inside its card instead of stretching the grid */
+.pipeline-column {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    min-width: 0;
+}
+
+section {
+    background-color: var(--surface-color);
+    padding: 1.5rem;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+h2 {
+    font-size: 1.2rem;
+    margin-top: 0;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Controls */
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+label {
+    font-size: 0.95rem;
+    color: var(--muted-color);
+}
+
+select,
+button {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background-color: var(--surface-color);
+    color: var(--text-color);
+    font-family: inherit;
+    cursor: pointer;
+}
+
+select:hover,
+button:hover {
+    background-color: var(--border-color);
+}
+
+select {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Program Editor */
+.program-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.75rem;
+    background-color: var(--inset-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-family: var(--mono-family);
+    font-size: 1rem;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+.program-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.program-errors:empty {
+    display: none;
+}
+
+.program-errors {
+    margin-top: 0.75rem;
+}
+
+.error-line {
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.4rem;
+    border-radius: 4px;
+    background-color: var(--danger-bg);
+    color: var(--danger-color);
+    font-family: var(--mono-family);
+    font-size: 0.9rem;
+}
+
+/* Legend */
+.stage-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    color: var(--muted-color);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.legend-swatch {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 2px;
+    border: 1px solid transparent;
+}
+
+.legend-swatch.stage-if { background-color: var(--stage-if); }
+.legend-swatch.stage-id { background-color: var(--stage-id); }
+.legend-swatch.stage-ex { background-color: var(--stage-ex); }
+.legend-swatch.stage-mem { background-color: var(--stage-mem); }
+.legend-swatch.stage-wb { background-color: var(--stage-wb); }
+
+.legend-swatch.stall {
+    background-color: var(--danger-bg);
+    border: 1px dashed var(--stall-color);
+}
+
+/* Cycle Table */
+.cycle-table-container {
+    overflow-x: auto;
+    padding: 1rem;
+    background-color: var(--inset-bg);
+    border-radius: 4px;
+}
+
+.cycle-table {
+    border-collapse: collapse;
+}
+
+.cycle-table th {
+    background-color: var(--overlay-weak);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.cycle-table .instr-label {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    min-width: 11rem;
+    padding: 0.4rem 0.75rem;
+    text-align: left;
+    white-space: nowrap;
+    font-family: var(--mono-family);
+    font-size: 0.9rem;
+    font-weight: 400;
+    background-color: var(--surface-color);
+}
+
+.line-num {
+    display: inline-block;
+    min-width: 1.75rem;
+    margin-right: 0.5rem;
+    color: var(--muted-color);
+    font-size: 0.75rem;
+}
+
+.cycle-row:hover td,
+.cycle-row:focus td {
+    background-color: var(--overlay-strong);
+}
+
+.cycle-row:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+}
+
+.cycle-cell {
+    width: 56px;
+    min-width: 56px;
+    height: 2.25rem;
+    padding: 0;
+    text-align: center;
+    font-family: var(--mono-family);
+    font-size: 0.9rem;
+    border: 1px solid var(--border-color);
+    transition: background-color 0.2s;
+}
+
+.cycle-cell.stage-if {
+    background-color: color-mix(in srgb, var(--stage-if) 20%, transparent);
+    border-color: var(--stage-if);
+    color: var(--stage-if);
+}
+
+.cycle-cell.stage-id {
+    background-color: color-mix(in srgb, var(--stage-id) 20%, transparent);
+    border-color: var(--stage-id);
+    color: var(--stage-id);
+}
+
+.cycle-cell.stage-ex {
+    background-color: color-mix(in srgb, var(--stage-ex) 20%, transparent);
+    border-color: var(--stage-ex);
+    color: var(--stage-ex);
+}
+
+.cycle-cell.stage-mem {
+    background-color: color-mix(in srgb, var(--stage-mem) 20%, transparent);
+    border-color: var(--stage-mem);
+    color: var(--stage-mem);
+}
+
+.cycle-cell.stage-wb {
+    background-color: color-mix(in srgb, var(--stage-wb) 20%, transparent);
+    border-color: var(--stage-wb);
+    color: var(--stage-wb);
+}
+
+/* Dashed border and bubble glyph keep stalls distinct without relying on color */
+.cycle-cell.stall {
+    background-color: var(--danger-bg);
+    border: 1px dashed var(--stall-color);
+    color: var(--stall-color);
+}
+
+.stall-stage {
+    color: var(--muted-color);
+}
+
+.cycle-cell.linked {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+}
+
+/* Summary */
+.summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: var(--inset-bg);
+    border-radius: 4px;
+    font-family: var(--mono-family);
+}
+
+.summary-stat span {
+    color: var(--muted-color);
+    margin-right: 0.4rem;
+}
+
+.summary-stat strong {
+    color: var(--secondary-color);
+}
+
+.summary-notice {
+    width: 100%;
+    color: var(--danger-color);
+    font-size: 0.9rem;
+}
+
+/* Stall Explanations */
+.explanation-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.explanation-item {
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-left: 3px solid var(--stall-color);
+    border-radius: 4px;
+    background-color: var(--inset-bg);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    transition: background-color 0.2s;
+}
+
+.explanation-item.linked,
+.explanation-item:hover {
+    background-color: var(--overlay-strong);
+}
+
+.empty-note {
+    color: var(--muted-color);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .app-layout {
+        grid-template-columns: 1fr;
+    }
+}

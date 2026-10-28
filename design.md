@@ -27,11 +27,12 @@ All of `:root`. The first eight are copied from kmap-solver; the rest replace va
 ```css
 :root {
     --bg-color: #121212;
-    --surface-color: #1e1e1e;
+    --surface-color: #262626;
     --primary-color: #bb86fc;
     --secondary-color: #03dac6;
     --text-color: #e0e0e0;
     --border-color: #333;
+    --card-border: #484848;
     --highlight-color: #3700b3;
     --font-family: 'Inter', sans-serif;
 
@@ -59,6 +60,8 @@ Stage and stall colors reuse the kmap-solver accent palette (Dracula-ish) and ar
 
 A stage cell is a tinted fill of its color (about 20% alpha) with a solid 1px border and the stage name as text. A stall cell uses `--stall-color`, a dashed border, and the held stage name in muted text plus a bubble glyph, so it is distinguishable without color. Verify contrast of each stage color on `--surface-color` before shipping.
 
+Deliberate deviation from kmap-solver: `--surface-color` is lightened from `#1e1e1e` to `#262626` and cards get a `--card-border` outline, because cards were hard to tell apart from the `#121212` background.
+
 ## Typography
 
 - UI text: Inter (400, 500, 600, 700) from Google Fonts with `preconnect`, falling back to `sans-serif`.
@@ -68,7 +71,7 @@ A stage cell is a tinted fill of its color (about 20% alpha) with a solid 1px bo
 ## Spacing, shape, motion
 
 - Spacing in `rem`, steps of 0.25, 0.5, 0.75, 1, 1.5, 2.
-- Cards: `background: var(--surface-color); padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3)`. Card `h2`: `margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem`.
+- Cards: `background: var(--surface-color); border: 1px solid var(--card-border); padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3)`. Card `h2`: `margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem`.
 - Controls (select, button): `padding: 0.5rem 1rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--surface-color); color: var(--text-color); font-family: inherit; cursor: pointer`. Hover: `background: var(--border-color)`.
 - Textarea and inset panels: `background: var(--inset-bg); border-radius: 4px`.
 - Motion: only `transition: background-color 0.2s`. No other animation.
@@ -97,7 +100,7 @@ The simulator and the table must agree with these rules exactly.
    - `lw` as producer behaves identically (no forwarding, so no special load-use case).
 5. `$0` / `$zero` is never a hazard source.
 6. **Control.** `j` resolves in ID: the next fetch occurs the cycle after `j`'s ID, giving 1 bubble in IF. `beq` reads its sources in ID (subject to RAW stalls), resolves in EX, and the next fetch occurs the cycle after its EX, giving 2 bubbles in IF (plus any RAW stall cycles). Taken and not-taken cost the same; fetch resumes at the correct address.
-7. Execution is traced by following control flow, so loops and skips appear as the instructions actually executed, in order. Cap the trace (for example 200 instructions) and show a notice if the program does not terminate.
+7. Execution is traced by following control flow. Register values are not computed, so `j` is always followed but `beq` is always traced as not taken (fall through); its timing cost is the same either way. Cap the trace (for example 200 instructions) and show a notice if the program does not terminate.
 8. Supported instructions: `add sub and or slt` (R-type), `addi lw sw` (I-type, `offset(base)` for memory), `beq` (label target), `j` (label target), `nop`. Anything else is an inline error. Only register dependencies are modeled; memory contents and register values are not computed in v1.
 
 Each stall cell stores `{ reg, producerIndex, clearsAtCycle }` so the Explanation list and tooltips never recompute hazard logic.

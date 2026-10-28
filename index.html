@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIPS Pipeline Cycle Visualizer</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>MIPS Pipeline Cycle Visualizer</h1>
+            <p>Interactive tool to see how instructions move through a 5-stage pipeline.</p>
+        </header>
+
+        <main class="app-layout">
+            <section class="program-section">
+                <h2>Program</h2>
+                <div class="controls">
+                    <label for="example-select">Example:</label>
+                    <select id="example-select">
+                        <!-- Example programs generated here -->
+                    </select>
+                </div>
+                <label class="visually-hidden" for="program-input">MIPS assembly</label>
+                <textarea id="program-input" class="program-input" rows="12" spellcheck="false" autocomplete="off"></textarea>
+                <div id="program-errors" class="program-errors" role="alert">
+                    <!-- Line-numbered assembly errors generated here -->
+                </div>
+            </section>
+
+            <div class="pipeline-column">
+                <section class="pipeline-section">
+                    <h2>Pipeline</h2>
+                    <div id="stage-legend" class="stage-legend">
+                        <!-- Stage and stall legend generated here -->
+                    </div>
+                    <div id="cycle-table-container" class="cycle-table-container">
+                        <!-- Instruction-by-cycle table generated here -->
+                    </div>
+                    <div id="summary" class="summary">
+                        <!-- Cycles, instructions, stalls, CPI generated here -->
+                    </div>
+                </section>
+
+                <section class="explanation-section">
+                    <h2>Stall Explanations</h2>
+                    <ul id="explanation-list" class="explanation-list">
+                        <!-- One item per stall generated here -->
+                    </ul>
+                </section>
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
