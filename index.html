@@ -35,6 +35,13 @@
             <div class="pipeline-column">
                 <section class="pipeline-section">
                     <h2>Pipeline</h2>
+                    <div class="controls forwarding-controls">
+                        <span id="forwarding-label" class="toggle-label">Hazards:</span>
+                        <div class="segmented" role="group" aria-labelledby="forwarding-label">
+                            <button type="button" id="forwarding-off" class="active" aria-pressed="true">No forwarding</button>
+                            <button type="button" id="forwarding-on" aria-pressed="false">Forwarding</button>
+                        </div>
+                    </div>
                     <div id="stage-legend" class="stage-legend">
                         <!-- Stage and stall legend generated here -->
                     </div>
@@ -47,13 +54,201 @@
                 </section>
 
                 <section class="explanation-section">
-                    <h2>Stall Explanations</h2>
+                    <h2>Stalls and Forwards</h2>
                     <ul id="explanation-list" class="explanation-list">
                         <!-- One item per stall generated here -->
                     </ul>
                 </section>
             </div>
         </main>
+
+        <section class="datapath-section" id="datapath-section">
+            <h2>Datapath</h2>
+            <div class="controls datapath-controls">
+                <button type="button" id="cycle-prev">&larr; Prev</button>
+                <span id="cycle-status" class="cycle-status" aria-live="polite"></span>
+                <button type="button" id="cycle-next">Next &rarr;</button>
+            </div>
+            <div class="datapath-scroll" tabindex="0" aria-label="Pipelined datapath for the selected cycle. Left and right arrow keys change the cycle.">
+                <svg id="datapath" class="datapath-svg" viewBox="0 0 1075 600" role="img" aria-label="Five-stage pipelined MIPS datapath with the parts used in the selected cycle highlighted by stage color">
+                    <!-- Stage headers: static stage name, instruction label filled in by script.js -->
+                    <text class="dp-stage-name stage-if" x="109" y="14" text-anchor="middle">IF</text>
+                    <text class="dp-stage-name stage-id" x="318" y="14" text-anchor="middle">ID</text>
+                    <text class="dp-stage-name stage-ex" x="566" y="14" text-anchor="middle">EX</text>
+                    <text class="dp-stage-name stage-mem" x="825" y="14" text-anchor="middle">MEM</text>
+                    <text class="dp-stage-name stage-wb" x="1006" y="14" text-anchor="middle">WB</text>
+                    <text id="dp-label-if" class="dp-label" x="109" y="30" text-anchor="middle" tabindex="0"></text>
+                    <text id="dp-label-id" class="dp-label" x="318" y="30" text-anchor="middle" tabindex="0"></text>
+                    <text id="dp-label-ex" class="dp-label" x="566" y="30" text-anchor="middle" tabindex="0"></text>
+                    <text id="dp-label-mem" class="dp-label" x="825" y="30" text-anchor="middle" tabindex="0"></text>
+                    <text id="dp-label-wb" class="dp-label" x="1006" y="30" text-anchor="middle" tabindex="0"></text>
+
+                    <g transform="translate(0,40)">
+                        <!-- Stage regions -->
+                        <rect id="dp-region-if" class="dp-region" x="8" y="0" width="202" height="560" rx="6"/>
+                        <rect id="dp-region-id" class="dp-region" x="232" y="0" width="173" height="560" rx="6"/>
+                        <rect id="dp-region-ex" class="dp-region" x="430" y="0" width="272" height="560" rx="6"/>
+                        <rect id="dp-region-mem" class="dp-region" x="730" y="0" width="190" height="560" rx="6"/>
+                        <rect id="dp-region-wb" class="dp-region" x="950" y="0" width="112" height="560" rx="6"/>
+
+                        <!-- Wires: IF -->
+                        <polyline id="dp-w-pc-imem" class="dp-wire" points="58,270 85,270"/>
+                        <polyline id="dp-w-pc-add4" class="dp-wire" points="70,270 70,170 85,170"/>
+                        <polyline id="dp-w-const4" class="dp-wire" points="72,154 85,154"/>
+                        <polyline id="dp-w-add4-ifid" class="dp-wire" points="125,160 205,160"/>
+                        <polyline id="dp-w-add4-pcmux" class="dp-wire" points="145,160 145,72 54,72"/>
+                        <polyline id="dp-w-pcmux-pc" class="dp-wire" points="42,110 42,250"/>
+                        <polyline id="dp-w-imem-ifid" class="dp-wire" points="190,275 205,275"/>
+
+                        <!-- Wires: ID -->
+                        <polyline id="dp-w-ifid-rs" class="dp-wire" points="227,250 260,250"/>
+                        <polyline id="dp-w-ifid-rt" class="dp-wire" points="227,275 260,275"/>
+                        <polyline id="dp-w-ifid-signext" class="dp-wire" points="227,385 275,385"/>
+                        <polyline id="dp-w-signext-idex" class="dp-wire" points="345,385 405,385"/>
+                        <polyline id="dp-w-ifid-idex-pc" class="dp-wire" points="227,160 405,160"/>
+                        <polyline id="dp-w-ifid-rt-idex" class="dp-wire" points="227,405 405,405"/>
+                        <polyline id="dp-w-ifid-rd-idex" class="dp-wire" points="227,435 405,435"/>
+                        <polyline id="dp-w-regs-idex-a" class="dp-wire" points="380,250 405,250"/>
+                        <polyline id="dp-w-regs-idex-b" class="dp-wire" points="380,296 405,296"/>
+                        <polyline id="dp-w-ifid-pcmux-jump" class="dp-wire" points="227,62 245,62 245,24 36,24 36,60"/>
+
+                        <!-- Wires: EX -->
+                        <polyline id="dp-w-idex-alu-a" class="dp-wire dp-nofwd" points="427,250 600,250"/>
+                        <polyline id="dp-w-idex-b-alumux" class="dp-wire dp-nofwd" points="427,296 530,296"/>
+                        <polyline id="dp-w-idex-b-exmem" class="dp-wire dp-nofwd" points="516,296 516,350 705,350"/>
+                        <polyline id="dp-w-idex-imm-trunk" class="dp-wire" points="427,385 436,385 436,322"/>
+                        <polyline id="dp-w-idex-alumux-imm" class="dp-wire" points="436,322 530,322"/>
+                        <polyline id="dp-w-idex-shift2" class="dp-wire" points="436,322 436,90 520,90"/>
+                        <polyline id="dp-w-shift2-badd" class="dp-wire" points="570,90 585,90 585,85 600,85"/>
+                        <polyline id="dp-w-idex-badd-pc" class="dp-wire" points="427,160 590,160 590,115 600,115"/>
+                        <polyline id="dp-w-alumux-alu" class="dp-wire" points="552,300 570,300 570,310 600,310"/>
+                        <polyline id="dp-w-idex-aluctl" class="dp-wire" points="436,385 580,385"/>
+                        <polyline id="dp-w-aluctl-alu" class="dp-wire" points="615,365 615,324"/>
+                        <polyline id="dp-w-alu-exmem" class="dp-wire" points="670,280 705,280"/>
+                        <polyline id="dp-w-alu-zero" class="dp-wire" points="670,262 690,262 690,190 705,190"/>
+                        <polyline id="dp-w-badd-exmem" class="dp-wire" points="660,100 705,100"/>
+                        <polyline id="dp-w-idex-rt-regdst" class="dp-wire" points="427,405 540,405"/>
+                        <polyline id="dp-w-idex-rd-regdst" class="dp-wire" points="427,435 540,435"/>
+                        <polyline id="dp-w-regdst-exmem" class="dp-wire" points="562,420 705,420"/>
+
+                        <!-- Wires: MEM -->
+                        <polyline id="dp-w-exmem-alu" class="dp-wire" points="727,280 770,280"/>
+                        <polyline id="dp-w-alu-dmem-addr" class="dp-wire" points="770,280 805,280"/>
+                        <polyline id="dp-w-alu-memwb" class="dp-wire" points="770,280 770,390 925,390"/>
+                        <polyline id="dp-w-exmem-dmem-wd" class="dp-wire" points="727,350 785,350 785,325 805,325"/>
+                        <polyline id="dp-w-exmem-and-branch" class="dp-wire" points="727,170 760,170"/>
+                        <polyline id="dp-w-exmem-and-zero" class="dp-wire" points="727,190 760,190"/>
+                        <polyline id="dp-w-and-pcsrc" class="dp-wire" points="795,180 815,180 815,40 48,40 48,60"/>
+                        <polyline id="dp-w-exmem-pcmux" class="dp-wire" points="727,100 740,100 740,52 160,52 160,98 54,98"/>
+                        <polyline id="dp-w-exmem-memwb-dest" class="dp-wire" points="727,420 925,420"/>
+                        <polyline id="dp-w-dmem-memwb" class="dp-wire" points="900,280 925,280"/>
+
+                        <!-- Wires: WB -->
+                        <polyline id="dp-w-memwb-wbmux-mem" class="dp-wire" points="947,280 975,280"/>
+                        <polyline id="dp-w-memwb-wbmux-alu" class="dp-wire" points="947,390 965,390 965,315 975,315"/>
+                        <polyline id="dp-w-wbmux-regs" class="dp-wire" points="997,295 1030,295 1030,550 245,550 245,315 260,315"/>
+                        <polyline id="dp-w-memwb-regs-dest" class="dp-wire" points="947,420 960,420 960,530 252,530 252,300 260,300"/>
+
+
+                        <!-- Wires: forwarding (shown only when #datapath has .forwarding) -->
+                        <polyline id="dp-w-fwd-idex-a" class="dp-wire dp-fwd" points="427,250 462,250"/>
+                        <polyline id="dp-w-fwd-a-alu" class="dp-wire dp-fwd" points="482,250 600,250"/>
+                        <polyline id="dp-w-fwd-idex-b" class="dp-wire dp-fwd" points="427,296 462,296"/>
+                        <polyline id="dp-w-fwd-b-alumux" class="dp-wire dp-fwd" points="482,296 530,296"/>
+                        <polyline id="dp-w-fwd-b-exmem" class="dp-wire dp-fwd" points="500,296 500,350 705,350"/>
+                        <polyline id="dp-w-fwd-fb-exmem" class="dp-wire dp-fwd" points="745,280 745,472 452,472 452,308"/>
+                        <polyline id="dp-w-fwd-exmem-b" class="dp-wire dp-fwd" points="452,308 462,308"/>
+                        <polyline id="dp-w-fwd-exmem-a" class="dp-wire dp-fwd" points="452,308 452,262 462,262"/>
+                        <polyline id="dp-w-fwd-fb-memwb" class="dp-wire dp-fwd" points="446,550 446,284"/>
+                        <polyline id="dp-w-fwd-memwb-b" class="dp-wire dp-fwd" points="446,284 462,284"/>
+                        <polyline id="dp-w-fwd-memwb-a" class="dp-wire dp-fwd" points="446,284 446,238 462,238"/>
+                        <polyline id="dp-w-fwd-ctl" class="dp-wire dp-fwd" points="570,497 490,497 490,330"/>
+                        <polyline id="dp-w-fwd-ctl-b" class="dp-wire dp-fwd" points="490,330 472,330 472,316"/>
+                        <polyline id="dp-w-fwd-ctl-a" class="dp-wire dp-fwd" points="490,330 490,216 472,216 472,226"/>
+
+                        <!-- Blocks: IF -->
+                        <rect id="dp-pcmux" class="dp-block" x="30" y="60" width="24" height="50" rx="10"/>
+                        <text class="dp-text" x="42" y="86" text-anchor="middle" transform="rotate(-90 42 86)">Mux</text>
+                        <rect id="dp-pc" class="dp-block" x="30" y="250" width="28" height="40" rx="3"/>
+                        <text class="dp-text" x="44" y="274" text-anchor="middle">PC</text>
+                        <polygon id="dp-add4" class="dp-block" points="85,130 125,142 125,178 85,190 85,166 95,160 85,154"/>
+                        <text class="dp-text" x="108" y="164" text-anchor="middle">Add</text>
+                        <text class="dp-text" x="62" y="158" text-anchor="middle">4</text>
+                        <rect id="dp-imem" class="dp-block" x="85" y="230" width="105" height="90" rx="3"/>
+                        <text class="dp-text" x="137" y="270" text-anchor="middle">Instruction</text>
+                        <text class="dp-text" x="137" y="283" text-anchor="middle">memory</text>
+                        <rect id="dp-ifid" class="dp-block dp-pipereg" x="205" y="50" width="22" height="380"/>
+                        <text class="dp-text" x="216" y="240" text-anchor="middle" transform="rotate(-90 216 240)">IF/ID</text>
+
+                        <!-- Blocks: ID -->
+                        <rect id="dp-regs" class="dp-block" x="260" y="230" width="120" height="100" rx="3"/>
+                        <rect id="dp-regs-write" class="dp-block" x="260" y="290" width="48" height="40" rx="3"/>
+                        <text class="dp-text" x="320" y="262" text-anchor="middle">Registers</text>
+                        <text class="dp-text-small" x="264" y="256">Read reg 1</text>
+                        <text class="dp-text-small" x="264" y="281">Read reg 2</text>
+                        <text class="dp-text-small" x="264" y="306">Write reg</text>
+                        <text class="dp-text-small" x="264" y="321">Write data</text>
+                        <ellipse id="dp-signext" class="dp-block" cx="310" cy="385" rx="35" ry="20"/>
+                        <text class="dp-text" x="310" y="388" text-anchor="middle">Sign extend</text>
+                        <rect id="dp-idex" class="dp-block dp-pipereg" x="405" y="50" width="22" height="380"/>
+                        <text class="dp-text" x="416" y="240" text-anchor="middle" transform="rotate(-90 416 240)">ID/EX</text>
+                        <text id="dp-c-regwrite" class="dp-ctl" x="264" y="344">RegWrite</text>
+
+                        <!-- Blocks: EX -->
+                        <rect id="dp-shift2" class="dp-block" x="520" y="70" width="50" height="40" rx="3"/>
+                        <text class="dp-text" x="545" y="87" text-anchor="middle">Shift</text>
+                        <text class="dp-text" x="545" y="100" text-anchor="middle">left 2</text>
+                        <polygon id="dp-badd" class="dp-block" points="600,60 660,72 660,128 600,140 600,106 610,100 600,94"/>
+                        <text class="dp-text" x="635" y="104" text-anchor="middle">Add</text>
+                        <rect id="dp-alumux" class="dp-block" x="530" y="270" width="22" height="60" rx="10"/>
+                        <text class="dp-text" x="541" y="300" text-anchor="middle" transform="rotate(-90 541 300)">Mux</text>
+                        <polygon id="dp-alu" class="dp-block" points="600,230 670,258 670,302 600,330 600,290 615,280 600,270"/>
+                        <text class="dp-text" x="640" y="284" text-anchor="middle">ALU</text>
+                        <ellipse id="dp-aluctl" class="dp-block" cx="615" cy="385" rx="35" ry="20"/>
+                        <text class="dp-text" x="615" y="382" text-anchor="middle">ALU</text>
+                        <text class="dp-text" x="615" y="394" text-anchor="middle">control</text>
+                        <rect id="dp-regdstmux" class="dp-block" x="540" y="390" width="22" height="60" rx="10"/>
+                        <text class="dp-text" x="551" y="420" text-anchor="middle" transform="rotate(-90 551 420)">Mux</text>
+                        <rect id="dp-exmem" class="dp-block dp-pipereg" x="705" y="50" width="22" height="380"/>
+                        <text class="dp-text" x="716" y="240" text-anchor="middle" transform="rotate(-90 716 240)">EX/MEM</text>
+                        <text id="dp-c-alusrc" class="dp-ctl" x="516" y="264">ALUSrc</text>
+                        <text id="dp-c-aluop" class="dp-ctl" x="654" y="372">ALUOp</text>
+                        <text id="dp-c-regdst" class="dp-ctl" x="542" y="462">RegDst</text>
+
+
+                        <!-- Blocks: forwarding -->
+                        <rect id="dp-fwdmux-a" class="dp-block dp-fwd" x="462" y="226" width="20" height="40" rx="8"/>
+                        <text class="dp-text dp-fwd" x="472" y="246" text-anchor="middle" transform="rotate(-90 472 246)">Mux</text>
+                        <rect id="dp-fwdmux-b" class="dp-block dp-fwd" x="462" y="276" width="20" height="40" rx="8"/>
+                        <text class="dp-text dp-fwd" x="472" y="296" text-anchor="middle" transform="rotate(-90 472 296)">Mux</text>
+                        <rect id="dp-fwdunit" class="dp-block dp-fwd" x="570" y="482" width="120" height="30" rx="3"/>
+                        <text class="dp-text dp-fwd" x="630" y="501" text-anchor="middle">Forwarding unit</text>
+                        <text id="dp-c-forwarda" class="dp-ctl dp-fwd" x="448" y="212">ForwardA</text>
+                        <text id="dp-c-forwardb" class="dp-ctl dp-fwd" x="494" y="342">ForwardB</text>
+
+                        <!-- Blocks: MEM -->
+                        <path id="dp-and" class="dp-block" d="M760,160 L775,160 A20,20 0 0 1 775,200 L760,200 Z"/>
+                        <text class="dp-text" x="770" y="184" text-anchor="middle">And</text>
+                        <rect id="dp-dmem" class="dp-block" x="805" y="250" width="95" height="100" rx="3"/>
+                        <text class="dp-text" x="852" y="296" text-anchor="middle">Data</text>
+                        <text class="dp-text" x="852" y="309" text-anchor="middle">memory</text>
+                        <rect id="dp-memwb" class="dp-block dp-pipereg" x="925" y="50" width="22" height="380"/>
+                        <text class="dp-text" x="936" y="240" text-anchor="middle" transform="rotate(-90 936 240)">MEM/WB</text>
+                        <text id="dp-c-branch" class="dp-ctl" x="731" y="166">Branch</text>
+                        <text id="dp-c-memread" class="dp-ctl" x="810" y="246">MemRead</text>
+                        <text id="dp-c-memwrite" class="dp-ctl" x="810" y="362">MemWrite</text>
+
+                        <!-- Blocks: WB -->
+                        <rect id="dp-wbmux" class="dp-block" x="975" y="260" width="22" height="70" rx="10"/>
+                        <text class="dp-text" x="986" y="295" text-anchor="middle" transform="rotate(-90 986 295)">Mux</text>
+                        <text id="dp-c-memtoreg" class="dp-ctl" x="956" y="254">MemtoReg</text>
+                    </g>
+                </svg>
+            </div>
+            <ul id="datapath-caption" class="datapath-caption">
+                <!-- One line per stage for the selected cycle generated here -->
+            </ul>
+        </section>
     </div>
     <script src="script.js"></script>
 </body>

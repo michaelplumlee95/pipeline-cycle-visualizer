@@ -14,7 +14,7 @@ const SCRIPT_PATH = process.env.PIPE_SCRIPT || path.join(__dirname, '..', 'scrip
 
 const EXPORTS = `
 globalThis.__pipe = {
-    assemble, simulate, escapeHtml, examples, maxInstructions,
+    assemble, simulate, datapathState, dpPaths, dpLitIds, escapeHtml, examples, maxInstructions,
     getProgramText: () => programText,
 };
 `;
@@ -24,6 +24,16 @@ function loadSource(scriptPath) {
     const idx = src.lastIndexOf('});');
     if (idx < 0) throw new Error('harness: could not find closing "});" in script.js');
     return src.slice(0, idx) + EXPORTS + src.slice(idx);
+}
+
+// Ids of every dp- element in the shipped index.html, so tests and the stub DOM track the real SVG.
+function datapathIds() {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    const ids = [];
+    const re = /\bid="(dp-[\w-]+)"/g;
+    let m;
+    while ((m = re.exec(html))) ids.push(m[1]);
+    return ids;
 }
 
 // --- Stub DOM ---------------------------------------------------------------
@@ -36,6 +46,7 @@ class StubElement {
         this.value = '';
         this.dataset = {};
         this.listeners = {};
+        this.attrs = {};
         this.children = [];
         this._classes = new Set();
         this.htmlWrites = 0;
@@ -51,6 +62,7 @@ class StubElement {
         this.htmlWrites++;
         this._doc._reparse(this);
     }
+    setAttribute(k, v) { this.attrs[k] = String(v); }
     addEventListener(type, fn) { (this.listeners[type] = this.listeners[type] || []).push(fn); }
     dispatch(type, extra) {
         const ev = Object.assign({ target: this, type }, extra);
@@ -86,7 +98,7 @@ class StubDocument {
     _reparse(container) {
         this.all = this.all.filter(e => e._owner !== container);
         container.children = [];
-        const tagRe = /<(tr|td|li)\b([^>]*)>/g;
+        const tagRe = /<(tr|th|td|li)\b([^>]*)>/g;
         let m;
         while ((m = tagRe.exec(container._html))) {
             const attrs = {};
@@ -111,7 +123,10 @@ class StubDocument {
 function createApp(opts = {}) {
     const doc = new StubDocument();
     ['example-select', 'program-input', 'program-errors', 'stage-legend',
-        'cycle-table-container', 'summary', 'explanation-list'].forEach(id => doc.element(id));
+        'cycle-table-container', 'summary', 'explanation-list', 'datapath-section', 'cycle-prev',
+        'cycle-next', 'cycle-status', 'datapath-caption', 'forwarding-off', 'forwarding-on', 'datapath'].forEach(id => doc.element(id));
+    // The SVG parts script.js lights are looked up by id, so give each one a stub element
+    datapathIds().forEach(id => doc.element(id));
 
     const sandbox = { document: doc, console, Math, JSON, parseInt, String, Set, Map, Array, Object };
     sandbox.globalThis = sandbox;
@@ -127,7 +142,10 @@ function createApp(opts = {}) {
     const api = {
         maxInstructions: raw.maxInstructions,
         assemble: text => clone(raw.assemble(text)),
-        simulate: instrs => clone(raw.simulate(instrs)),
+        simulate: (instrs, forwarding) => clone(raw.simulate(instrs, forwarding)),
+        datapathState: (result, cycle) => clone(raw.datapathState(result, cycle)),
+        dpPaths: clone(raw.dpPaths),
+        dpLitIds: clone(raw.dpLitIds),
         escapeHtml: raw.escapeHtml,
         examples: clone(raw.examples),
         getProgramText: raw.getProgramText,
@@ -142,10 +160,11 @@ function createApp(opts = {}) {
         // Same path a user takes: edit the textarea, fire 'input'.
         type(text) { input.value = text; input.dispatch('input', { target: input }); },
         chooseExample(id) { select.value = id; select.dispatch('change', { target: select }); },
+        forwarding: on => doc.getElementById(on ? 'forwarding-on' : 'forwarding-off').dispatch('click'),
         select, input,
         rows: () => doc.all.filter(e => e.tag === 'tr' && e._classes.has('cycle-row')),
         cells: () => doc.all.filter(e => e.tag === 'td'),
     };
 }
 
-module.exports = { createApp, loadSource, SCRIPT_PATH };
+module.exports = { createApp, loadSource, datapathIds, SCRIPT_PATH };

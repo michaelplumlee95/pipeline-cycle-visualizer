@@ -179,6 +179,35 @@ select {
     font-size: 0.9rem;
 }
 
+/* Forwarding Toggle */
+.toggle-label {
+    font-size: 0.95rem;
+    color: var(--muted-color);
+}
+
+.segmented {
+    display: flex;
+}
+
+.segmented button {
+    border-radius: 0;
+}
+
+.segmented button:first-child {
+    border-radius: 4px 0 0 4px;
+}
+
+.segmented button:last-child {
+    border-radius: 0 4px 4px 0;
+    border-left-width: 0;
+}
+
+.segmented button.active {
+    background-color: var(--highlight-color);
+    border-color: var(--primary-color);
+    color: var(--text-color);
+}
+
 /* Legend */
 .stage-legend {
     display: flex;
@@ -333,9 +362,39 @@ select {
     color: var(--muted-color);
 }
 
+/* A forwarded EX cell keeps its stage color; the marker says it took a bypass without relying on color */
+.fwd-mark {
+    margin-left: 0.2rem;
+    font-size: 0.6rem;
+    vertical-align: super;
+}
+
 .cycle-cell.linked {
     outline: 2px solid var(--primary-color);
     outline-offset: -2px;
+}
+
+/* Selected cycle: the column the datapath is showing. A gradient layers over the stage fill instead of replacing it. */
+.cycle-head {
+    cursor: pointer;
+}
+
+.cycle-table th.cycle-selected {
+    background-color: var(--highlight-color);
+    color: var(--text-color);
+}
+
+.cycle-table td.cycle-selected {
+    background-image: linear-gradient(var(--overlay-strong), var(--overlay-strong));
+}
+
+.cycle-head:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+}
+
+.cycle-row.linked td {
+    background-color: var(--overlay-strong);
 }
 
 /* Summary */
@@ -387,6 +446,10 @@ select {
     transition: background-color 0.2s;
 }
 
+.explanation-item.forward {
+    border-left-color: var(--secondary-color);
+}
+
 .explanation-item.linked,
 .explanation-item:hover {
     background-color: var(--overlay-strong);
@@ -397,6 +460,226 @@ select {
     font-size: 0.9rem;
     margin: 0;
 }
+
+/* Datapath */
+.datapath-section {
+    margin-top: 2rem;
+}
+
+.datapath-controls {
+    justify-content: center;
+}
+
+.cycle-status {
+    min-width: 12rem;
+    text-align: center;
+    font-family: var(--mono-family);
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+}
+
+button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+button:disabled:hover {
+    background-color: var(--surface-color);
+}
+
+.datapath-scroll {
+    overflow-x: auto;
+    padding: 0.5rem;
+    background-color: var(--inset-bg);
+    border-radius: 4px;
+}
+
+.datapath-scroll:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+}
+
+/* A fixed minimum width keeps labels legible; narrower cards scroll instead of shrinking the diagram */
+.datapath-svg {
+    display: block;
+    width: 100%;
+    min-width: 900px;
+    height: auto;
+    font-family: var(--mono-family);
+}
+
+/* Each stage class sets --dp-color once; every part below reads it */
+.datapath-svg .stage-if { --dp-color: var(--stage-if); }
+.datapath-svg .stage-id { --dp-color: var(--stage-id); }
+.datapath-svg .stage-ex { --dp-color: var(--stage-ex); }
+.datapath-svg .stage-mem { --dp-color: var(--stage-mem); }
+.datapath-svg .stage-wb { --dp-color: var(--stage-wb); }
+
+.dp-stage-name {
+    fill: var(--dp-color);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.dp-label {
+    fill: var(--text-color);
+    font-size: 11px;
+}
+
+.dp-label.dp-flagged {
+    fill: var(--stall-color);
+}
+
+.dp-label.linked {
+    fill: var(--primary-color);
+    text-decoration: underline;
+}
+
+.dp-label:focus {
+    outline: none;
+    fill: var(--primary-color);
+}
+
+.dp-region {
+    fill: none;
+    stroke: var(--border-color);
+    stroke-width: 1;
+    transition: fill 0.2s;
+}
+
+.dp-region.active {
+    fill: color-mix(in srgb, var(--dp-color) 6%, transparent);
+    stroke: color-mix(in srgb, var(--dp-color) 50%, transparent);
+}
+
+/* Dashed outline and the "bubble" label keep stalls distinct without relying on color */
+.dp-region.dp-bubble,
+.dp-region.dp-stalled {
+    fill: var(--danger-bg);
+    stroke: var(--stall-color);
+    stroke-dasharray: 5 4;
+}
+
+.dp-region.dp-stalled.active {
+    fill: color-mix(in srgb, var(--dp-color) 6%, transparent);
+}
+
+/* Forwarding hardware is always in the SVG and only shown when the toggle is on; the straight
+   wires it replaces are hidden at the same time */
+.datapath-svg .dp-fwd {
+    display: none;
+}
+
+.datapath-svg.forwarding .dp-fwd {
+    display: inline;
+}
+
+.datapath-svg.forwarding .dp-nofwd {
+    display: none;
+}
+
+.dp-wire {
+    fill: none;
+    stroke: var(--card-border);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+}
+
+.dp-wire.active {
+    stroke: var(--dp-color);
+    stroke-width: 3;
+}
+
+.dp-block {
+    fill: var(--surface-color);
+    stroke: var(--muted-color);
+    stroke-width: 1.5;
+    transition: fill 0.2s;
+}
+
+.dp-pipereg {
+    fill: var(--overlay-weak);
+}
+
+.dp-block.active {
+    fill: color-mix(in srgb, var(--dp-color) 28%, var(--surface-color));
+    stroke: var(--dp-color);
+    stroke-width: 2.5;
+}
+
+/* The write port sits over the register file's read port and has no outline of its own when idle */
+#dp-regs-write {
+    fill: none;
+    stroke: none;
+}
+
+#dp-regs-write.active {
+    fill: color-mix(in srgb, var(--dp-color) 28%, var(--surface-color));
+    stroke: var(--dp-color);
+}
+
+.dp-text,
+.dp-text-small,
+.dp-ctl {
+    fill: var(--text-color);
+    font-size: 10px;
+    pointer-events: none;
+}
+
+.dp-text-small {
+    fill: var(--muted-color);
+    font-size: 8px;
+}
+
+.dp-ctl {
+    fill: var(--muted-color);
+    font-size: 9px;
+    font-style: italic;
+}
+
+.dp-ctl.active {
+    fill: var(--dp-color);
+    font-weight: 700;
+}
+
+.datapath-caption {
+    list-style: none;
+    margin: 1rem 0 0;
+    padding: 0;
+    font-size: 0.9rem;
+}
+
+.caption-item {
+    margin-bottom: 0.4rem;
+    padding: 0.4rem 0.75rem;
+    border-left: 3px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--inset-bg);
+    font-family: var(--mono-family);
+    transition: background-color 0.2s;
+}
+
+.caption-item.flagged {
+    border-left-color: var(--stall-color);
+}
+
+.caption-item.linked {
+    background-color: var(--overlay-strong);
+}
+
+.caption-stage {
+    display: inline-block;
+    min-width: 3rem;
+    margin-right: 0.5rem;
+    color: var(--dp-color);
+    font-weight: 700;
+}
+
+.caption-stage.stage-if { --dp-color: var(--stage-if); }
+.caption-stage.stage-id { --dp-color: var(--stage-id); }
+.caption-stage.stage-ex { --dp-color: var(--stage-ex); }
+.caption-stage.stage-mem { --dp-color: var(--stage-mem); }
+.caption-stage.stage-wb { --dp-color: var(--stage-wb); }
 
 @media (max-width: 768px) {
     .app-layout {

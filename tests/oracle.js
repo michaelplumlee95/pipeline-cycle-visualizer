@@ -2,10 +2,10 @@
 // latches and checks hazards each cycle. It shares no timing formulas with script.js
 // (which computes each instruction's cycles directly), so agreement is meaningful.
 //
-// Takes assembled instructions, returns { total, stageAt, path }.
+// Takes assembled instructions (and whether forwarding is on), returns { total, stageAt, path }.
 // stageAt[i][cycle] = 'IF'|'ID'|'EX'|'MEM'|'WB' for dynamic instruction i.
 
-function simulateOracle(instrs, cap) {
+function simulateOracle(instrs, cap, forwarding) {
     const path = [];
     let pc = 0;
     while (pc < instrs.length && path.length < cap) {
@@ -37,7 +37,15 @@ function simulateOracle(instrs, cap) {
                 if (src.n === 0) return true;
                 for (let w = cur.ID - 1; w >= 0; w--) {
                     const d = path[w].dest;
-                    if (d && d.n === src.n) return wroteBack[w];
+                    if (d && d.n === src.n) {
+                        if (wroteBack[w]) return true;
+                        // Forwarding: this instruction reaches EX next cycle. The producer will then be
+                        // in MEM (result sits in EX/MEM, so it must be in EX now and not a load) or in
+                        // WB (value sits in MEM/WB, so it is in MEM now).
+                        if (!forwarding) return false;
+                        if (cur.MEM === w) return true;
+                        return cur.EX === w && path[w].op !== 'lw';
+                    }
                 }
                 return true;
             });

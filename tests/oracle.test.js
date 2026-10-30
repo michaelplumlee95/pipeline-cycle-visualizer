@@ -37,11 +37,11 @@ function randomProgram(rand) {
     return lines.join('\n');
 }
 
-function compare(code) {
+function compare(code, forwarding) {
     const a = api.assemble(code);
     assert.deepEqual(a.errors, [], 'generated program should assemble:\n' + code);
-    const sim = api.simulate(a.instrs);
-    const ref = simulateOracle(a.instrs, api.maxInstructions);
+    const sim = api.simulate(a.instrs, forwarding);
+    const ref = simulateOracle(a.instrs, api.maxInstructions, forwarding);
     const where = '\n' + code;
 
     assert.equal(sim.rows.length, ref.path.length, 'path length' + where);
@@ -83,17 +83,28 @@ test('hand-picked programs agree with the oracle', () => {
         'addi $t0, $zero, 1\nbeq $t0, $t1, done\nadd $t2, $t0, $t0\ndone:\nor $t4, $t2, $t2',
         'addi $t0, $zero, 1\nj skip\nadd $t1, $t0, $t0\nskip:\nsub $t2, $t0, $t0',
         'add $t0, $s0, $s0\nbeq $t0, $t1, end\nend:\nnop',
-    ].forEach(compare);
+    ].forEach(code => [false, true].forEach(fwd => compare(code, fwd)));
 });
 
 test('every bundled example agrees with the oracle', () => {
-    api.examples.forEach(e => compare(e.code));
+    api.examples.forEach(e => [false, true].forEach(fwd => compare(e.code, fwd)));
 });
 
-test('the endless-loop cap agrees with the oracle', () => compare('top: j top'));
+test('the endless-loop cap agrees with the oracle', () => [false, true].forEach(fwd => compare('top: j top', fwd)));
 
 test('500 random programs agree with the oracle', () => {
     const rand = mulberry32(331);
-    for (let i = 0; i < 500; i++) compare(randomProgram(rand));
+    for (let i = 0; i < 500; i++) compare(randomProgram(rand), false);
+    note('seed 331, 500 programs');
+});
+
+test('500 random programs agree with the oracle with forwarding on, and never take longer', () => {
+    const rand = mulberry32(331);
+    for (let i = 0; i < 500; i++) {
+        const code = randomProgram(rand);
+        compare(code, true);
+        const instrs = api.assemble(code).instrs;
+        assert.ok(api.simulate(instrs, true).totalCycles <= api.simulate(instrs, false).totalCycles, 'forwarding is never slower\n' + code);
+    }
     note('seed 331, 500 programs');
 });

@@ -45,7 +45,9 @@ Full detail is in `design.md`. The short version:
 
 - Classic 5-stage, one instruction fetched per cycle when not stalled.
 - Register file is written in the first half of WB and read in the second half of ID, so a consumer may read in the same cycle its producer is in WB.
+- **Forwarding is a toggle, off by default.** `simulate(instrs, forwarding)` swaps only the hazard rule; the trace format is the same plus a `forwards` list on EX cells.
 - **No forwarding.** A RAW hazard stalls the consumer in ID until the producer reaches WB. Back-to-back dependency costs 2 bubbles. `lw` followed by a dependent instruction costs the same.
+- **Forwarding.** Results are bypassed into EX. ALU producers never stall their consumer (EX/MEM, then MEM/WB forwards); a `lw` producer costs its immediate consumer 1 bubble (MEM/WB forward). Branch timing is unchanged.
 - **Branches and jumps stall fetch.** No prediction and no flush. `beq` resolves in EX, so 2 fetch bubbles follow it. `j` resolves in ID, so 1 follows it. Taken or not taken, the cost is identical; fetch then resumes at the correct address.
 - Supported instructions: `add sub and or slt addi lw sw beq j nop`. Labels, `#` comments, and `$t0`-style or `$8`-style register names are accepted.
 
@@ -71,4 +73,4 @@ Match kmap-solver exactly:
 
 ## Out of scope for v1
 
-Data forwarding, branch prediction and flush, delay slots, an animated datapath diagram, register and memory panels, stepping backward, and instructions beyond the list above. Forwarding on/off is the planned first extension; design the simulator so a hazard-resolution strategy can be swapped in without rewriting the trace format.
+Branch prediction and flush, delay slots, datapath animation or autoplay, register and memory panels, stepping backward, and instructions beyond the list above.

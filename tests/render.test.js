@@ -33,7 +33,7 @@ test('one row per instruction and one header per cycle', () => {
     const app = createApp();
     app.type('add $t0, $t1, $t2\nsub $t3, $t0, $t4');
     assert.equal(app.rows().length, 2);
-    assert.equal(count(app.html('cycle-table-container'), /<th scope="col">/g), 8);
+    assert.equal(count(app.html('cycle-table-container'), /<th scope="col"/g), 8);
 });
 
 test('stall cells are dashed-class cells with a reason in the tooltip', () => {
@@ -111,7 +111,7 @@ suite('D. Explanations');
 test('one list item per stall, linked to the table by id', () => {
     const app = createApp();
     app.type('add $t0, $t1, $t2\nsub $t3, $t0, $t4');
-    const items = app.doc.all.filter(e => e.tag === 'li');
+    const items = app.doc.all.filter(e => e.tag === 'li' && e._owner === app.el('explanation-list'));
     assert.equal(items.length, 1);
     assert.ok(app.doc.querySelectorAll('[data-stall="0"]').length >= 3); // item + 2 cells
 });

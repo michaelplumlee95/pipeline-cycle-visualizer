@@ -18,6 +18,7 @@ Visual and behavioral spec for the MIPS pipeline cycle visualizer. It reuses the
 - `.app-layout`: `display: grid; grid-template-columns: 1fr 2fr; gap: 2rem`. Collapses to `1fr` at `max-width: 768px` (the only breakpoint).
   - Left column: **Program** card (example picker, assembly textarea, inline errors).
   - Right column: **Pipeline** card (legend, cycle table, summary line) and an **Explanation** card listing each stall in plain words.
+- **Datapath** card: full width below `.app-layout` (`margin-top: 2rem`). The diagram scrolls horizontally inside its own container below about 1000px of card width; it never causes page-level horizontal scroll.
 - The cycle table scrolls horizontally inside its card (`overflow-x: auto`) when the program is long. It never causes page-level horizontal scroll.
 
 ## Tokens
@@ -85,7 +86,8 @@ Deliberate deviation from kmap-solver: `--surface-color` is lightened from `#1e1
 - **Legend.** Swatch (`0.75rem` square, `border-radius: 2px`) plus label for each stage and for stall. Uses `:empty { display: none }` if ever conditional.
 - **Summary line.** Total cycles, instructions, stall count, and CPI, in a `--inset-bg` box.
 - **Explanation list.** One item per stall: which instruction waits, on which register, from which producer, and which cycle it clears. Hovering an item highlights the matching table cells.
-- **Segmented toggle** (reserved for the future forwarding on/off switch): joined buttons, outer radii 4px, `.active` uses `--highlight-color` background, `--primary-color` border, white text.
+- **Datapath.** See "Datapath view" below.
+- **Segmented toggle** (forwarding off / on, top of the Pipeline card): two joined buttons labeled "No forwarding" and "Forwarding", outer radii 4px, `.active` uses `--highlight-color` background, `--primary-color` border, `--text-color` text, and `aria-pressed` reflects the state. The choice persists while editing and changes the table, summary, explanations, and datapath together. Forwarded EX cells show a small `fwd` marker (not color alone) and share a `data-stall` id with their explanation line for hover linking. The summary adds a "Forwards" count when forwarding is on.
 
 ## Pipeline semantics
 
@@ -103,8 +105,59 @@ The simulator and the table must agree with these rules exactly.
 7. Execution is traced by following control flow. Register values are not computed, so `j` is always followed but `beq` is always traced as not taken (fall through); its timing cost is the same either way. Cap the trace (for example 200 instructions) and show a notice if the program does not terminate.
 8. Supported instructions: `add sub and or slt` (R-type), `addi lw sw` (I-type, `offset(base)` for memory), `beq` (label target), `j` (label target), `nop`. Anything else is an inline error. Only register dependencies are modeled; memory contents and register values are not computed in v1.
 
+9. **Forwarding (toggle, off by default).** A segmented toggle in the Pipeline card switches the hazard rule; rules 1-3 and 5-8 do not change, only rule 4 does. With forwarding on, a result is bypassed to the EX stage instead of waiting for the register file:
+   - An instruction needs its sources at the start of its own EX. An ALU-type producer (`add sub and or slt addi`) has its result at the end of its EX, so the next instruction forwards it from **EX/MEM** with no stall.
+   - A `lw` producer has its data at the end of its MEM, so the consumer forwards it from **MEM/WB**. A dependent instruction directly behind a `lw` stalls **1 bubble** (the load-use hazard). One unrelated instruction between them: 0 bubbles.
+   - The instruction two behind an ALU-type producer forwards from **MEM/WB**. Three or more behind reads the register file normally (rule 3), with no forwarding.
+   - An instruction may complete ID only in a cycle `>= producer's ID cycle + 1` for an ALU-type producer, or `>= producer's ID cycle + 2` for `lw`. For several sources, the latest requirement wins.
+   - `sw` forwards its store data (`rt`) the same way, into the EX/MEM write-data path. `beq` forwards both compare operands, since it compares in EX. `$0` is never forwarded.
+   - Control timing (rule 6) is unchanged: a `beq` still costs 2 fetch bubbles and a `j` 1.
+   - Each EX cell records `forwards: [{ reg, operand: 'A' | 'B', from: 'EX/MEM' | 'MEM/WB', producerIndex }]`; an operand that merely reads the register file is not listed. `operand` is the ALU input the value feeds: A is the `rs`/base register, B is the `rt` register (for `sw`, the store data).
+   - The Explanation list gets a line per forward, and the stall text for a load-use hazard names the MEM/WB forward.
+
 Each stall cell stores `{ reg, producerIndex, clearsAtCycle }` so the Explanation list and tooltips never recompute hazard logic.
+
+## Datapath view
+
+A hand-authored inline SVG redraw of the course's pipelined MIPS datapath (PC, instruction memory, IF/ID, register file, sign extend, ID/EX, ALU and ALU control, branch adder, shift left 2, EX/MEM, AND gate and PCSrc mux, data memory, MEM/WB, write-back mux, RegDst mux, control signal labels). It shows one clock cycle at a time and has no animation.
+
+**Cycle selection.** `selectedCycle` is the user's choice (default 5). The cycle shown is `min(selectedCycle, totalCycles)`, so a short program does not permanently lower the choice. Clicking a cycle header or any cell in that column selects it; Prev/Next buttons and the left/right arrow keys (with focus in the Datapath card) step. The selected column gets `.cycle-selected` in the table. Header cells are focusable and take Enter or Space.
+
+**Ids.** Every part has an id with the prefix `dp-`: blocks (`dp-alu`), wires (`dp-w-regs-idex-a`), control labels (`dp-c-alusrc`), stage regions (`dp-region-ex`) and stage labels (`dp-label-ex`). `script.js` only toggles classes on these and sets label text. Nothing in the SVG is rebuilt.
+
+**Highlight rule.** Each stage with an instruction in the selected cycle gets its stage color (`--stage-*`, the same colors as the table and legend) on its region and on the blocks, wires and control labels that instruction uses in that stage, chosen by opcode (table below). A wire belongs to the stage doing the work with it. A pipeline register is lit by the stage that fills it (IF/ID by IF, ID/EX by ID, EX/MEM by EX, MEM/WB by MEM). The register file is two elements: `dp-regs` is the read port (ID) and `dp-regs-write` is the write port (WB). Unused parts stay in `--card-border` strokes.
+
+**Bubbles.** A stage with no instruction is a *bubble* when some instruction passed through that stage earlier and another passes later; before the first and after the last it is just empty (no styling). A bubble region gets a dashed `--stall-color` outline and the label `bubble`. An instruction held in ID by a RAW stall keeps its ID color, adds the dashed outline, and lights only its register read (`dp-regs`, `dp-w-ifid-rs`, `dp-w-ifid-rt`), since the value is not yet usable. An instruction held in IF lights only `dp-pc`, `dp-imem`, `dp-w-pc-imem`. The reason for each bubble or hold comes from the stall cell in the trace (`reason`); stages downstream of a stall say "Bubble from an earlier stall". The caption under the diagram lists every stage with its instruction or reason, so nothing depends on color.
+
+**Opcode to lit parts.** (`R` = add sub and or slt; ids without the `dp-` prefix; "all" below means the listed common sets.)
+
+- IF, every instruction: `pc imem add4 pcmux ifid w-pc-imem w-pc-add4 w-const4 w-add4-ifid w-add4-pcmux w-pcmux-pc w-imem-ifid`.
+- ID, every instruction except `j` and `nop`: `regs signext idex w-ifid-rs w-ifid-rt w-ifid-signext w-signext-idex w-ifid-idex-pc w-ifid-rt-idex w-ifid-rd-idex w-regs-idex-a w-regs-idex-b`. `j` lights only `w-ifid-pcmux-jump`. `nop` lights nothing but the region.
+- EX:
+  - `R`: `alu alumux aluctl regdstmux exmem w-idex-alu-a w-idex-b-alumux w-alumux-alu w-idex-imm-trunk w-idex-aluctl w-aluctl-alu w-alu-exmem w-idex-rt-regdst w-idex-rd-regdst w-regdst-exmem c-alusrc c-aluop c-regdst`.
+  - `addi`, `lw`: as `R` but `w-idex-alumux-imm` replaces `w-idex-b-alumux`.
+  - `sw`: `alu alumux aluctl exmem w-idex-alu-a w-idex-alumux-imm w-idex-imm-trunk w-alumux-alu w-idex-aluctl w-aluctl-alu w-alu-exmem w-idex-b-exmem c-alusrc c-aluop` (no RegDst path).
+  - `beq`: `alu alumux aluctl shift2 badd exmem w-idex-alu-a w-idex-b-alumux w-alumux-alu w-idex-aluctl w-aluctl-alu w-alu-zero w-idex-imm-trunk w-idex-shift2 w-shift2-badd w-idex-badd-pc w-badd-exmem c-alusrc c-aluop`.
+  - `j`, `nop`: none.
+- MEM:
+  - `R`, `addi`: `memwb w-exmem-alu w-alu-memwb w-exmem-memwb-dest`.
+  - `lw`: `memwb dmem w-exmem-alu w-alu-dmem-addr w-dmem-memwb w-exmem-memwb-dest c-memread`.
+  - `sw`: `dmem w-exmem-alu w-alu-dmem-addr w-exmem-dmem-wd c-memwrite` (nothing is passed to MEM/WB).
+  - `beq`: `and w-exmem-and-branch w-exmem-and-zero w-and-pcsrc w-exmem-pcmux c-branch`.
+  - `j`, `nop`: none.
+- WB:
+  - `R`, `addi`: `regs-write wbmux w-memwb-wbmux-alu w-wbmux-regs w-memwb-regs-dest c-memtoreg c-regwrite`.
+  - `lw`: same with `w-memwb-wbmux-mem` instead of `w-memwb-wbmux-alu`.
+  - `sw`, `beq`, `j`, `nop`: none (no register write).
+
+**Known gap versus the simulator.** The course diagram resolves the branch in MEM (AND gate and PCSrc). The simulator resolves `beq` in EX (design rule 6), so the diagram lights the compare and branch-target hardware in EX and the AND/PCSrc path one cycle later in MEM. Fetch resumes on the simulator's schedule, not the diagram's.
+
+**Accessibility.** The SVG has `role="img"` and an `aria-label`. The caption list, with `aria-live="polite"` on the cycle status, repeats each stage's content in text. Stage labels carry `tabindex="0"` and link to the table row via `data-row` (hover and focus, like stall cells).
+
+**Forwarding.** The SVG always contains the forwarding hardware: two forwarding muxes (`dp-fwdmux-a`, `dp-fwdmux-b`) in front of the ALU, a forwarding unit (`dp-fwdunit`), the two feedback buses (`dp-w-fwd-fb-exmem` from EX/MEM, `dp-w-fwd-fb-memwb` from the write-back mux), and their control wires and labels. They carry the class `dp-fwd` and are `display: none` unless `#datapath` has the class `forwarding`. The straight no-forwarding wires into the ALU carry `dp-nofwd` and are hidden when it does. The two sets are separate elements so the diagram can switch on a whim without moving anything.
+
+With forwarding on, an EX instruction lights the forwarding-mux path for each operand it uses. An operand that is forwarded lights its feedback bus and the matching mux input instead of the ID/EX input, plus `dp-fwdunit`, the control wires, and `dp-c-forwarda` or `dp-c-forwardb`. The caption names the source ("$t0 forwarded from EX/MEM").
 
 ## Out of scope for v1
 
-Forwarding, branch prediction and flush, delay slots, datapath diagram, register and memory panels, step-back controls. Planned first extension: a forwarding on/off segmented toggle that changes only the hazard-resolution rule while keeping the trace format.
+Branch prediction and flush, delay slots, datapath animation and autoplay, register and memory panels, step-back controls. 
